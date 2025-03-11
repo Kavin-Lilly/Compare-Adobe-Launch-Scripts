@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compare Adobe Launch Scripts</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #ffffff;
+            color: #333;
+        }
+        h2 {
+            text-align: center;
+            color: #c8102e; /* Eli Lilly Red */
+        }
+        input {
+            width: 80%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: block;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #c8102e;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin: 10px 0;
+            display: block;
+            width: 100%;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #a00e25;
+        }
+        .accordion {
+            background-color: #eee;
+            color: #444;
+            cursor: pointer;
+            padding: 12px;
+            width: 100%;
+            text-align: left;
+            border: none;
+            outline: none;
+            transition: 0.4s;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .accordion.active {
+            background-color: #ddd;
+        }
+        .panel {
+            padding: 0 18px;
+            display: none;
+            background-color: white;
+            overflow: hidden;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background-color: white;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #c8102e; /* Eli Lilly Red */
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f2f2f2;
+        }
+        .loader {
+            display: none;
+            margin: 20px auto;
+            border: 6px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 6px solid #c8102e;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Compare Adobe Launch Scripts</h2>
+
+    <label>Launch Script 1 (URL or &lt;script&gt; tag):</label>
+    <input type="text" id="script1" placeholder="Paste Launch script URL or &lt;script&gt; tag">
+
+    <label>Launch Script 2 (URL or &lt;script&gt; tag):</label>
+    <input type="text" id="script2" placeholder="Paste Launch script URL or &lt;script&gt; tag">
+
+    <button onclick="executeScripts()">Execute & Compare</button>
+
+    <div class="loader" id="loadingSpinner"></div>
+
+    <button class="accordion">Rules Comparison</button>
+    <div class="panel">
+        <table id="rulesTable">
+            <thead>
+                <tr>
+                    <th>Rule Name</th>
+                    <th>Status</th>
+                    <th>Events Match</th>
+                    <th>Conditions Match</th>
+                    <th>Actions Match</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        document.querySelectorAll(".accordion").forEach(button => {
+            button.addEventListener("click", function () {
+                this.classList.toggle("active");
+                let panel = this.nextElementSibling;
+                panel.style.display = panel.style.display === "block" ? "none" : "block";
+            });
+        });
+
+        function extractScriptURL(input) {
+            let trimmedInput = input.trim();
+
+            if (trimmedInput.startsWith("http")) {
+                return trimmedInput; // Direct URL
+            }
+
+            let match = trimmedInput.match(/<script.*?src=["'](https?:\/\/[^"']+)["'].*?>/i);
+            return match ? match[1] : null;
+        }
+
+        async function loadScriptInIsolation(scriptURL) {
+            return new Promise((resolve, reject) => {
+                let iframe = document.createElement("iframe");
+                iframe.style.display = "none";
+                document.body.appendChild(iframe);
+                let iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+
+                let script = iframeDoc.createElement("script");
+                script.src = scriptURL;
+                script.async = true;
+                script.onload = () => {
+                    setTimeout(() => {
+                        try {
+                            let container = iframe.contentWindow._satellite?._container;
+                            if (container) {
+                                resolve(JSON.parse(JSON.stringify(container)));
+                            } else {
+                                reject(`Failed to load _satellite._container from ${scriptURL}`);
+                            }
+                        } catch (e) {
+                            reject(`Error accessing _satellite._container from ${scriptURL}`);
+                        }
+                        document.body.removeChild(iframe);
+                    }, 5000);
+                };
+                script.onerror = () => reject(`Failed to load script: ${scriptURL}`);
+                iframeDoc.body.appendChild(script);
+            });
+        }
+
+        async function executeScripts() {
+            document.getElementById("loadingSpinner").style.display = "block";
+
+            let scriptURL1 = extractScriptURL(document.getElementById("script1").value);
+            let scriptURL2 = extractScriptURL(document.getElementById("script2").value);
+
+            if (!scriptURL1 || !scriptURL2) {
+                alert("Please enter valid script URLs or <script> tags.");
+                document.getElementById("loadingSpinner").style.display = "none";
+                return;
+            }
+
+            try {
+                window.container1 = await loadScriptInIsolation(scriptURL1);
+                window.container2 = await loadScriptInIsolation(scriptURL2);
+
+                await fetchActionSources(window.container1);
+                await fetchActionSources(window.container2);
+
+                setTimeout(() => {
+                    compareRules();
+                    document.getElementById("loadingSpinner").style.display = "none";
+                }, 2000);
+
+            } catch (error) {
+                console.error(error);
+                alert(error);
+                document.getElementById("loadingSpinner").style.display = "none";
+            }
+        }
+
+        function compareRules() {
+            let rules1 = window.container1.rules || [];
+            let rules2 = window.container2.rules || [];
+            let results = [];
+            let checkedRules = new Set();
+
+            rules1.forEach(rule1 => {
+                let rule2 = rules2.find(r => r.name === rule1.name);
+                checkedRules.add(rule1.name);
+
+                if (rule2) {
+                    let sameEvents = JSON.stringify(rule1.events) === JSON.stringify(rule2.events);
+                    let sameConditions = JSON.stringify(rule1.conditions) === JSON.stringify(rule2.conditions);
+                    let sameActions = JSON.stringify(rule1.actions) === JSON.stringify(rule2.actions);
+
+                    results.push({
+                        ruleName: rule1.name,
+                        status: sameEvents && sameConditions && sameActions ? "✅ Matched" : "❌ Mismatch",
+                        eventsMatch: sameEvents ? "✔" : "❌",
+                        conditionsMatch: sameConditions ? "✔" : "❌",
+                        actionsMatch: sameActions ? "✔" : "❌"
+                    });
+                } else {
+                    results.unshift({
+                        ruleName: rule1.name,
+                        status: "⚠️ Missing in Container 2",
+                        eventsMatch: "N/A",
+                        conditionsMatch: "N/A",
+                        actionsMatch: "N/A"
+                    });
+                }
+            });
+
+            updateTable(results);
+        }
+
+        function updateTable(results) {
+            const tableBody = document.querySelector("#rulesTable tbody");
+            tableBody.innerHTML = "";
+
+            results.forEach(row => {
+                let tr = document.createElement("tr");
+                Object.values(row).forEach(value => {
+                    let td = document.createElement("td");
+                    td.textContent = value;
+                    tr.appendChild(td);
+                });
+                tableBody.appendChild(tr);
+            });
+        }
+
+        async function fetchActionSources(container) {
+            if (!container || !container.rules) return;
+
+            let fetchPromises = [];
+
+            container.rules.forEach(rule => {
+                rule.actions.forEach(action => {
+                    if (action.modulePath.includes('/actions/customCode.js') && action.settings?.source.startsWith('https://assets.adobedtm.com/')) {
+                        fetchPromises.push(
+                            fetch(action.settings.source)
+                                .then(response => response.text())
+                                .then(scriptContent => {
+                                    action.settings.source = scriptContent
+                                        .replace(/^\/\/.*license information.*\n/, '')
+                                        .replace(/^_satellite.__registerScript\(['"][^'"]+['"],\s*/, '')
+                                        .replace(/^"|"$/g, '')
+                                        .replace(/\);$/, '');
+                                })
+                                .catch(error => console.warn(`⚠️ Failed to fetch source: ${action.settings.source}`, error))
+                        );
+                    }
+                });
+            });
+
+            await Promise.all(fetchPromises);
+        }
+
+    </script>
+</body>
+</html>
