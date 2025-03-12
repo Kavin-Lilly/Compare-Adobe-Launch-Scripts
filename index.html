@@ -304,7 +304,8 @@ async function executeScripts() {
         
                 results.push({
                     deName: deName,
-                    status: element2 ? (isMatch ? "✅ Matched" : "❌ Mismatch") : "⚠️ Missing in Container 2"
+                    status: element2 ? (isMatch ? "✅ Matched" : "❌ Mismatch") : "⚠️ Missing in Container 2",
+                    objectMatch: element2 ? (isMatch ? "✔" : "❌") : "N/A" // Ensure object match column is filled
                 });
             });
         
@@ -313,13 +314,15 @@ async function executeScripts() {
                 if (!checkedElements.has(deName)) {
                     results.push({
                         deName: deName,
-                        status: "⚠️ Missing in Container 1"
+                        status: "⚠️ Missing in Container 1",
+                        objectMatch: "N/A"
                     });
                 }
             });
         
             updateDataElementTable(results);
         }
+
 
 
 
