@@ -184,6 +184,31 @@
         </div>
 
 
+            <!-- Extensions Comparison Table -->
+            <button class="accordion">Extension Comparison</button>
+            <div class="panel">
+                <label for="extensionFilter">Filter Extensions:</label>
+                <select id="extensionFilter">
+                    <option value="all">Show All</option>
+                    <option value="matched">✅ Matched</option>
+                    <option value="mismatch">❌ Mismatch</option>
+                    <option value="missing1">⚠️ Missing in Container 1</option>
+                    <option value="missing2">⚠️ Missing in Container 2</option>
+                </select>
+                <table id="extensionTable">
+                    <thead>
+                        <tr>
+                            <th>Extension Name</th>
+                            <th>Status</th>
+                            <th>Version Match</th>
+                            <th>Settings Match</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <p id="noExtensionsResultsMessage" style="display: none; color: #c8102e; font-weight: bold; text-align: center;">No results found</p>
+            </div>
+
 
 
     <script>
@@ -365,7 +390,49 @@ async function executeScripts() {
             updateDataElementTable(results);
         }
 
-
+            function compareExtensions() {
+                        let ext1 = window.container1.extensions || [];
+                        let ext2 = window.container2.extensions || [];
+                        let results = [];
+                        let checkedExtensions = new Set();
+                
+                        ext1.forEach(extension1 => {
+                            let extension2 = ext2.find(ext => ext.displayName === extension1.displayName);
+                            checkedExtensions.add(extension1.displayName);
+                
+                            if (extension2) {
+                                let sameVersion = extension1.version === extension2.version;
+                                let sameSettings = JSON.stringify(extension1.settings) === JSON.stringify(extension2.settings);
+                
+                                results.push({
+                                    extensionName: extension1.displayName,
+                                    status: sameVersion && sameSettings ? "✅ Matched" : "❌ Mismatch",
+                                    versionMatch: sameVersion ? "✔" : "❌",
+                                    settingsMatch: sameSettings ? "✔" : "❌"
+                                });
+                            } else {
+                                results.unshift({
+                                    extensionName: extension1.displayName,
+                                    status: "⚠️ Missing in Container 2",
+                                    versionMatch: "N/A",
+                                    settingsMatch: "N/A"
+                                });
+                            }
+                        });
+                
+                        ext2.forEach(extension2 => {
+                            if (!checkedExtensions.has(extension2.displayName)) {
+                                results.push({
+                                    extensionName: extension2.displayName,
+                                    status: "⚠️ Missing in Container 1",
+                                    versionMatch: "N/A",
+                                    settingsMatch: "N/A"
+                                });
+                            }
+                        });
+                
+                        updateExtensionTable(results);
+                    }
 
 
 
@@ -388,6 +455,21 @@ async function executeScripts() {
             const tableBody = document.querySelector("#dataElementTable tbody");
             tableBody.innerHTML = "";
         
+            results.forEach(row => {
+                let tr = document.createElement("tr");
+                Object.values(row).forEach(value => {
+                    let td = document.createElement("td");
+                    td.textContent = value;
+                    tr.appendChild(td);
+                });
+                tableBody.appendChild(tr);
+            });
+        }
+
+        function updateExtensionTable(results) {
+            const tableBody = document.querySelector("#extensionTable tbody");
+            tableBody.innerHTML = "";
+    
             results.forEach(row => {
                 let tr = document.createElement("tr");
                 Object.values(row).forEach(value => {
