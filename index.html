@@ -359,40 +359,55 @@ async function executeScripts() {
 
 
         function compareRules() {
-            let rules1 = window.container1.rules || [];
-            let rules2 = window.container2.rules || [];
-            let results = [];
-            let checkedRules = new Set();
+                let rules1 = window.container1.rules || [];
+                let rules2 = window.container2.rules || [];
+                let results = [];
+                let checkedRules = new Set();
+            
+                // Check rules in container1
+                rules1.forEach(rule1 => {
+                    let rule2 = rules2.find(r => r.name === rule1.name);
+                    checkedRules.add(rule1.name);
+            
+                    if (rule2) {
+                        let sameEvents = JSON.stringify(rule1.events) === JSON.stringify(rule2.events);
+                        let sameConditions = JSON.stringify(rule1.conditions) === JSON.stringify(rule2.conditions);
+                        let sameActions = JSON.stringify(rule1.actions) === JSON.stringify(rule2.actions);
+            
+                        results.push({
+                            ruleName: rule1.name,
+                            status: sameEvents && sameConditions && sameActions ? "✅ Matched" : "❌ Mismatch",
+                            eventsMatch: sameEvents ? "✔" : "❌",
+                            conditionsMatch: sameConditions ? "✔" : "❌",
+                            actionsMatch: sameActions ? "✔" : "❌"
+                        });
+                    } else {
+                        results.unshift({
+                            ruleName: rule1.name,
+                            status: "⚠️ Missing in Container 2",
+                            eventsMatch: "N/A",
+                            conditionsMatch: "N/A",
+                            actionsMatch: "N/A"
+                        });
+                    }
+                });
+            
+                // Check for rules in container2 but missing in container1
+                rules2.forEach(rule2 => {
+                    if (!checkedRules.has(rule2.name)) {
+                        results.push({
+                            ruleName: rule2.name,
+                            status: "⚠️ Missing in Container 1",
+                            eventsMatch: "N/A",
+                            conditionsMatch: "N/A",
+                            actionsMatch: "N/A"
+                        });
+                    }
+                });
+            
+                updateTable(results);
+            }
 
-            rules1.forEach(rule1 => {
-                let rule2 = rules2.find(r => r.name === rule1.name);
-                checkedRules.add(rule1.name);
-
-                if (rule2) {
-                    let sameEvents = JSON.stringify(rule1.events) === JSON.stringify(rule2.events);
-                    let sameConditions = JSON.stringify(rule1.conditions) === JSON.stringify(rule2.conditions);
-                    let sameActions = JSON.stringify(rule1.actions) === JSON.stringify(rule2.actions);
-
-                    results.push({
-                        ruleName: rule1.name,
-                        status: sameEvents && sameConditions && sameActions ? "✅ Matched" : "❌ Mismatch",
-                        eventsMatch: sameEvents ? "✔" : "❌",
-                        conditionsMatch: sameConditions ? "✔" : "❌",
-                        actionsMatch: sameActions ? "✔" : "❌"
-                    });
-                } else {
-                    results.unshift({
-                        ruleName: rule1.name,
-                        status: "⚠️ Missing in Container 2",
-                        eventsMatch: "N/A",
-                        conditionsMatch: "N/A",
-                        actionsMatch: "N/A"
-                    });
-                }
-            });
-
-            updateTable(results);
-        }
 
         function compareDataElements() {
             let de1 = window.container1.dataElements || {};
