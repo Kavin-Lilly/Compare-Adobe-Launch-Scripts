@@ -296,35 +296,33 @@ async function executeScripts() {
                 let element2 = de2[deName]; // Check if exists in container2
                 checkedElements.add(deName);
         
-                if (element2) {
-                    let sameSource = JSON.stringify(element1.settings?.source) === JSON.stringify(element2.settings?.source);
-                    results.push({
-                        deName: deName,
-                        status: sameSource ? "✅ Matched" : "❌ Mismatch",
-                        sourceMatch: sameSource ? "✔" : "❌"
-                    });
-                } else {
-                    results.push({
-                        deName: deName,
-                        status: "⚠️ Missing in Container 2",
-                        sourceMatch: "N/A"
-                    });
-                }
+                // Convert entire object to a comparable string
+                let element1String = JSON.stringify(element1, Object.keys(element1).sort());
+                let element2String = element2 ? JSON.stringify(element2, Object.keys(element2).sort()) : null;
+        
+                let isMatch = element1String === element2String;
+        
+                results.push({
+                    deName: deName,
+                    status: element2 ? (isMatch ? "✅ Matched" : "❌ Mismatch") : "⚠️ Missing in Container 2",
+                    objectMatch: element2 ? (isMatch ? "✔" : "❌") : "N/A"
+                });
             });
         
-            // Check for Data Elements present in container2 but not in container1
+            // Check for Data Elements present in container2 but missing in container1
             Object.keys(de2).forEach(deName => {
                 if (!checkedElements.has(deName)) {
                     results.push({
                         deName: deName,
                         status: "⚠️ Missing in Container 1",
-                        sourceMatch: "N/A"
+                        objectMatch: "N/A"
                     });
                 }
             });
         
             updateDataElementTable(results);
         }
+
 
 
         function updateTable(results) {
@@ -356,6 +354,7 @@ async function executeScripts() {
                 tableBody.appendChild(tr);
             });
         }
+
 
 
         async function fetchActionSources(container) {
