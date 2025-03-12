@@ -177,6 +177,15 @@ async function loadScriptInIsolation(scriptURL) {
                                 }
                             });
                         });
+                        
+                        // Handle Data Element's custom code
+                        Object.keys(container.dataElements).forEach(deName => {
+                            let dataElement = container.dataElements[deName];
+                            if (typeof dataElement.settings?.source === 'function') {
+                                dataElement.settings.source = dataElement.settings.source.toString();
+                            }
+                        });
+
                         resolve(JSON.parse(JSON.stringify(container)));
                     } else {
                         reject(`Failed to load _satellite._container from ${scriptURL}`);
