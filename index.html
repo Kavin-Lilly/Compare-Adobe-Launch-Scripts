@@ -212,51 +212,52 @@
         }
 
 
-async function loadScriptInIsolation(scriptURL) {
-    return new Promise((resolve, reject) => {
-        let iframe = document.createElement("iframe");
-        iframe.style.display = "none";
-        document.body.appendChild(iframe);
-        let iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-
-        let script = iframeDoc.createElement("script");
-        script.src = scriptURL;
-        script.async = true;
-        script.onload = () => {
-            setTimeout(() => {
-                try {
-                    let container = iframe.contentWindow._satellite?._container;
-                    if (container) {
-                        container.rules.forEach(rule => {
-                            rule.conditions.forEach(cond => {
-                                if (typeof cond.settings?.source === 'function') {
-                                    cond.settings.source = cond.settings.source.toString();
+            async function loadScriptInIsolation(scriptURL) {
+                return new Promise((resolve, reject) => {
+                    let iframe = document.createElement("iframe");
+                    iframe.style.display = "none";
+                    document.body.appendChild(iframe);
+                    let iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            
+                    let script = iframeDoc.createElement("script");
+                    script.src = scriptURL;
+                    script.async = true;
+            
+                    // Using MutationObserver to detect when _satellite._container appears
+                    let observer = new MutationObserver(() => {
+                        let container = iframe.contentWindow._satellite?._container;
+                        if (container) {
+                            observer.disconnect();  // Stop observing once container is found
+            
+                            // Preserve your existing logic for modifying settings.source
+                            container.rules.forEach(rule => {
+                                rule.conditions.forEach(cond => {
+                                    if (typeof cond.settings?.source === 'function') {
+                                        cond.settings.source = cond.settings.source.toString();
+                                    }
+                                });
+                            });
+            
+                            Object.keys(container.dataElements).forEach(deName => {
+                                let dataElement = container.dataElements[deName];
+                                if (typeof dataElement.settings?.source === 'function') {
+                                    dataElement.settings.source = dataElement.settings.source.toString();
                                 }
                             });
-                        });
-                        
-                        // Handle Data Element's custom code
-                        Object.keys(container.dataElements).forEach(deName => {
-                            let dataElement = container.dataElements[deName];
-                            if (typeof dataElement.settings?.source === 'function') {
-                                dataElement.settings.source = dataElement.settings.source.toString();
-                            }
-                        });
+            
+                            resolve(JSON.parse(JSON.stringify(container)));
+                            document.body.removeChild(iframe);
+                        }
+                    });
+            
+                    // Start observing changes in the iframe window
+                    observer.observe(iframe.contentWindow.document, { childList: true, subtree: true });
+            
+                    script.onerror = () => reject(`Failed to load script: ${scriptURL}`);
+                    iframeDoc.body.appendChild(script);
+                });
+            }
 
-                        resolve(JSON.parse(JSON.stringify(container)));
-                    } else {
-                        reject(`Failed to load _satellite._container from ${scriptURL}`);
-                    }
-                } catch (e) {
-                    reject(`Error accessing _satellite._container from ${scriptURL}`);
-                }
-                document.body.removeChild(iframe);
-            }, 10000);
-        };
-        script.onerror = () => reject(`Failed to load script: ${scriptURL}`);
-        iframeDoc.body.appendChild(script);
-    });
-}
 
 async function executeScripts() {
     document.getElementById("loadingSpinner").style.display = "block";
