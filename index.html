@@ -172,7 +172,7 @@
                             reject(`Error accessing _satellite._container from ${scriptURL}`);
                         }
                         document.body.removeChild(iframe);
-                    }, 5000);
+                    }, 10000);
                 };
                 script.onerror = () => reject(`Failed to load script: ${scriptURL}`);
                 iframeDoc.body.appendChild(script);
