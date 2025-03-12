@@ -140,14 +140,20 @@
 
         function extractScriptURL(input) {
             let trimmedInput = input.trim();
-
-            if (trimmedInput.startsWith("http")) {
-                return trimmedInput; // Direct URL
-            }
-
+        
+            // Extract URL if it's a <script> tag
             let match = trimmedInput.match(/<script.*?src=["'](https?:\/\/[^"']+)["'].*?>/i);
-            return match ? match[1] : null;
+            let url = match ? match[1] : trimmedInput;
+        
+            // Ensure it always points to the unminified version
+            if (url.includes(".min.js")) {
+                url = url.replace(".min.js", ".js");
+            }
+        
+            // Validate it's a proper JS URL
+            return url.endsWith(".js") ? url : null;
         }
+
 
 async function loadScriptInIsolation(scriptURL) {
     return new Promise((resolve, reject) => {
