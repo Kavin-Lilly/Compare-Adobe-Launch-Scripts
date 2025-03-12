@@ -112,6 +112,19 @@
             border: 1px solid #c8102e;
         }
 
+            .export-btn {
+                padding: 8px 15px;
+                background-color: #008000; /* Green */
+                color: white;
+                border: none;
+                cursor: pointer;
+                border-radius: 5px;
+                font-weight: bold;
+                margin: 10px 0;
+            }
+            .export-btn:hover {
+                background-color: #006400;
+            }
 
         .loader {
             display: none;
@@ -156,7 +169,7 @@
             <option value="missing1">⚠️ Missing in Container 1</option>
             <option value="missing2">⚠️ Missing in Container 2</option>
         </select>
-            <button onclick="exportTableToExcel('rulesTable', 'Rules_Comparison')">Export to Excel</button>
+            <button class="export-btn" onclick="exportTableToExcel('rulesTable', 'Rules_Comparison')">Export to Excel</button>
             <table id="rulesTable">
                 <thead>
                     <tr>
@@ -186,7 +199,7 @@
             <option value="missing1">⚠️ Missing in Container 1</option>
             <option value="missing2">⚠️ Missing in Container 2</option>
         </select>
-            <button onclick="exportTableToExcel('dataElementTable', 'DataElements_Comparison')">Export to Excel</button>
+            <button class="export-btn" onclick="exportTableToExcel('dataElementTable', 'DataElements_Comparison')">Export to Excel</button>
             <table id="dataElementTable">
                 <thead>
                     <tr>
@@ -212,7 +225,7 @@
                     <option value="missing1">⚠️ Missing in Container 1</option>
                     <option value="missing2">⚠️ Missing in Container 2</option>
                 </select>
-                <button onclick="exportTableToExcel('extensionTable', 'Extensions_Comparison')">Export to Excel</button>
+                <button class="export-btn" onclick="exportTableToExcel('extensionTable', 'Extensions_Comparison')">Export to Excel</button>
                 <table id="extensionTable">
                     <thead>
                         <tr>
