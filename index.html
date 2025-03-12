@@ -306,6 +306,7 @@ async function executeScripts() {
 
         compareRules();
         compareDataElements();
+        compareExtensions();
         document.getElementById("loadingSpinner").style.display = "none";
     } catch (error) {
         console.error(error);
