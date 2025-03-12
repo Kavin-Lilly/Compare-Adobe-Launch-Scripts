@@ -391,48 +391,48 @@ async function executeScripts() {
         }
 
             function compareExtensions() {
-                        let ext1 = window.container1.extensions || [];
-                        let ext2 = window.container2.extensions || [];
-                        let results = [];
-                        let checkedExtensions = new Set();
-                
-                        ext1.forEach(extension1 => {
-                            let extension2 = ext2.find(ext => ext.displayName === extension1.displayName);
-                            checkedExtensions.add(extension1.displayName);
-                
-                            if (extension2) {
-                                let sameVersion = extension1.version === extension2.version;
-                                let sameSettings = JSON.stringify(extension1.settings) === JSON.stringify(extension2.settings);
-                
-                                results.push({
-                                    extensionName: extension1.displayName,
-                                    status: sameVersion && sameSettings ? "✅ Matched" : "❌ Mismatch",
-                                    versionMatch: sameVersion ? "✔" : "❌",
-                                    settingsMatch: sameSettings ? "✔" : "❌"
-                                });
-                            } else {
-                                results.unshift({
-                                    extensionName: extension1.displayName,
-                                    status: "⚠️ Missing in Container 2",
-                                    versionMatch: "N/A",
-                                    settingsMatch: "N/A"
-                                });
-                            }
-                        });
-                
-                        ext2.forEach(extension2 => {
-                            if (!checkedExtensions.has(extension2.displayName)) {
-                                results.push({
-                                    extensionName: extension2.displayName,
-                                    status: "⚠️ Missing in Container 1",
-                                    versionMatch: "N/A",
-                                    settingsMatch: "N/A"
-                                });
-                            }
-                        });
-                
-                        updateExtensionTable(results);
-                    }
+            let ext1 = window.container1.extensions || [];
+            let ext2 = window.container2.extensions || [];
+            let results = [];
+            let checkedExtensions = new Set();
+
+            ext1.forEach(extension1 => {
+                let extension2 = ext2.find(ext => ext.name === extension1.name);
+                checkedExtensions.add(extension1.name);
+
+                if (extension2) {
+                    let sameVersion = extension1.version === extension2.version;
+                    let sameSettings = JSON.stringify(extension1.settings) === JSON.stringify(extension2.settings);
+                    
+                    results.push({
+                        name: extension1.name,
+                        status: sameVersion && sameSettings ? "✅ Matched" : "❌ Mismatch",
+                        version: sameVersion ? "✔" : "❌",
+                        settingsMatch: sameSettings ? "✔" : "❌"
+                    });
+                } else {
+                    results.push({
+                        name: extension1.name,
+                        status: "⚠️ Missing in Container 2",
+                        version: "N/A",
+                        settingsMatch: "N/A"
+                    });
+                }
+            });
+
+            ext2.forEach(extension2 => {
+                if (!checkedExtensions.has(extension2.name)) {
+                    results.push({
+                        name: extension2.name,
+                        status: "⚠️ Missing in Container 1",
+                        version: "N/A",
+                        settingsMatch: "N/A"
+                    });
+                }
+            });
+
+            updateExtensionsTable(results);
+        }
 
 
 
@@ -466,10 +466,10 @@ async function executeScripts() {
             });
         }
 
-        function updateExtensionTable(results) {
-            const tableBody = document.querySelector("#extensionTable tbody");
+        function updateExtensionsTable(results) {
+            const tableBody = document.querySelector("#extensionsTable tbody");
             tableBody.innerHTML = "";
-    
+
             results.forEach(row => {
                 let tr = document.createElement("tr");
                 Object.values(row).forEach(value => {
@@ -480,7 +480,7 @@ async function executeScripts() {
                 tableBody.appendChild(tr);
             });
         }
-
+        
         function applyFilter(tableId, filterId, noResultsMessageId) {
             let filter = document.getElementById(filterId).value;
             let table = document.getElementById(tableId);
