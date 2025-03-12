@@ -392,48 +392,53 @@ async function executeScripts() {
         }
 
             function compareExtensions() {
-                    let ext1 = window.container1.extensions || [];
-                    let ext2 = window.container2.extensions || [];
-                    let results = [];
-                    let checkedExtensions = new Set();
+                let ext1 = window.container1.extensions || [];
+                let ext2 = window.container2.extensions || [];
             
-                    ext1.forEach(extension1 => {
-                        let extension2 = ext2.find(ext => ext.name === extension1.name);
-                        checkedExtensions.add(extension1.name);
+                if (!Array.isArray(ext1)) ext1 = Object.values(ext1);
+                if (!Array.isArray(ext2)) ext2 = Object.values(ext2);
             
-                        if (extension2) {
-                            let sameVersion = extension1.version === extension2.version;
-                            let sameSettings = JSON.stringify(extension1.settings) === JSON.stringify(extension2.settings);
-                            
-                            results.push({
-                                name: extension1.name,
-                                status: sameVersion && sameSettings ? "✅ Matched" : "❌ Mismatch",
-                                version: sameVersion ? "✔" : "❌",
-                                settingsMatch: sameSettings ? "✔" : "❌"
-                            });
-                        } else {
-                            results.push({
-                                name: extension1.name,
-                                status: "⚠️ Missing in Container 2",
-                                version: "N/A",
-                                settingsMatch: "N/A"
-                            });
-                        }
-                    });
+                let results = [];
+                let checkedExtensions = new Set();
             
-                    ext2.forEach(extension2 => {
-                        if (!checkedExtensions.has(extension2.name)) {
-                            results.push({
-                                name: extension2.name,
-                                status: "⚠️ Missing in Container 1",
-                                version: "N/A",
-                                settingsMatch: "N/A"
-                            });
-                        }
-                    });
+                ext1.forEach(extension1 => {
+                    let extension2 = ext2.find(ext => ext.name === extension1.name);
+                    checkedExtensions.add(extension1.name);
             
-                    updateExtensionsTable(results);
-                }
+                    if (extension2) {
+                        let sameVersion = extension1.version === extension2.version;
+                        let sameSettings = JSON.stringify(extension1.settings) === JSON.stringify(extension2.settings);
+            
+                        results.push({
+                            name: extension1.name,
+                            status: sameVersion && sameSettings ? "✅ Matched" : "❌ Mismatch",
+                            version: sameVersion ? "✔" : "❌",
+                            settingsMatch: sameSettings ? "✔" : "❌"
+                        });
+                    } else {
+                        results.push({
+                            name: extension1.name,
+                            status: "⚠️ Missing in Container 2",
+                            version: "N/A",
+                            settingsMatch: "N/A"
+                        });
+                    }
+                });
+            
+                ext2.forEach(extension2 => {
+                    if (!checkedExtensions.has(extension2.name)) {
+                        results.push({
+                            name: extension2.name,
+                            status: "⚠️ Missing in Container 1",
+                            version: "N/A",
+                            settingsMatch: "N/A"
+                        });
+                    }
+                });
+            
+                updateExtensionsTable(results);
+            }
+
 
 
 
