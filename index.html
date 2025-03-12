@@ -129,9 +129,11 @@
     <button onclick="executeScripts()">Execute & Compare</button>
 
     <div class="loader" id="loadingSpinner"></div>
-
-            <!-- Filter for Rules Comparison -->
-        <label for="rulesFilter">Filter Rules:</label>
+                
+        <!-- Rules Comparison Table -->
+        <button class="accordion">Rules Comparison</button>
+        <div class="panel">
+            <label for="rulesFilter">Filter Rules:</label>
         <select id="rulesFilter">
             <option value="all">Show All</option>
             <option value="matched">✅ Matched</option>
@@ -139,11 +141,6 @@
             <option value="missing1">⚠️ Missing in Container 1</option>
             <option value="missing2">⚠️ Missing in Container 2</option>
         </select>
-        <p id="noRulesResultsMessage" style="display: none; color: #c8102e; font-weight: bold; text-align: center;">No results found</p>
-        
-        <!-- Rules Comparison Table -->
-        <button class="accordion">Rules Comparison</button>
-        <div class="panel">
             <table id="rulesTable">
                 <thead>
                     <tr>
@@ -156,10 +153,16 @@
                 </thead>
                 <tbody></tbody>
             </table>
+            <p id="noRulesResultsMessage" style="display: none; color: #c8102e; font-weight: bold; text-align: center;">No results found</p>
         </div>
         
-        <!-- Filter for Data Elements Comparison -->
-        <label for="dataElementFilter">Filter Data Elements:</label>
+        
+        
+        
+        <!-- Data Elements Comparison Table -->
+        <button class="accordion">Data Element Comparison</button>
+        <div class="panel">
+            <label for="dataElementFilter">Filter Data Elements:</label>
         <select id="dataElementFilter">
             <option value="all">Show All</option>
             <option value="matched">✅ Matched</option>
@@ -167,11 +170,6 @@
             <option value="missing1">⚠️ Missing in Container 1</option>
             <option value="missing2">⚠️ Missing in Container 2</option>
         </select>
-        <p id="noDataResultsMessage" style="display: none; color: #c8102e; font-weight: bold; text-align: center;">No results found</p>
-        
-        <!-- Data Elements Comparison Table -->
-        <button class="accordion">Data Element Comparison</button>
-        <div class="panel">
             <table id="dataElementTable">
                 <thead>
                     <tr>
@@ -182,6 +180,7 @@
                 </thead>
                 <tbody></tbody>
             </table>
+            <p id="noDataResultsMessage" style="display: none; color: #c8102e; font-weight: bold; text-align: center;">No results found</p>
         </div>
 
 
