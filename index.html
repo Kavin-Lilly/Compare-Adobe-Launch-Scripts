@@ -392,52 +392,56 @@ async function executeScripts() {
         }
 
             function compareExtensions() {
-                let ext1 = window.container1.extensions || [];
-                let ext2 = window.container2.extensions || [];
-            
-                if (!Array.isArray(ext1)) ext1 = Object.values(ext1);
-                if (!Array.isArray(ext2)) ext2 = Object.values(ext2);
-            
-                let results = [];
-                let checkedExtensions = new Set();
-            
-                ext1.forEach(extension1 => {
-                    let extension2 = ext2.find(ext => ext.name === extension1.name);
-                    checkedExtensions.add(extension1.name);
-            
-                    if (extension2) {
-                        let sameVersion = extension1.version === extension2.version;
-                        let sameSettings = JSON.stringify(extension1.settings) === JSON.stringify(extension2.settings);
-            
-                        results.push({
-                            name: extension1.name,
-                            status: sameVersion && sameSettings ? "✅ Matched" : "❌ Mismatch",
-                            version: sameVersion ? "✔" : "❌",
-                            settingsMatch: sameSettings ? "✔" : "❌"
-                        });
-                    } else {
-                        results.push({
-                            name: extension1.name,
-                            status: "⚠️ Missing in Container 2",
-                            version: "N/A",
-                            settingsMatch: "N/A"
-                        });
-                    }
-                });
-            
-                ext2.forEach(extension2 => {
-                    if (!checkedExtensions.has(extension2.name)) {
-                        results.push({
-                            name: extension2.name,
-                            status: "⚠️ Missing in Container 1",
-                            version: "N/A",
-                            settingsMatch: "N/A"
-                        });
-                    }
-                });
-            
-                updateExtensionsTable(results);
-            }
+    let ext1 = window.container1.extensions || {};
+    let ext2 = window.container2.extensions || {};
+
+    // Convert extensions object into an array
+    ext1 = Object.values(ext1);
+    ext2 = Object.values(ext2);
+
+    let results = [];
+    let checkedExtensions = new Set();
+
+    ext1.forEach(extension1 => {
+        let extensionName = extension1.displayName || "Unknown Extension";
+        let extension2 = ext2.find(ext => ext.displayName === extensionName);
+        checkedExtensions.add(extensionName);
+
+        if (extension2) {
+            let sameVersion = extension1.version === extension2.version;
+            let sameSettings = JSON.stringify(extension1.settings) === JSON.stringify(extension2.settings);
+
+            results.push({
+                name: extensionName,
+                status: sameVersion && sameSettings ? "✅ Matched" : "❌ Mismatch",
+                version: sameVersion ? "✔" : "❌",
+                settingsMatch: sameSettings ? "✔" : "❌"
+            });
+        } else {
+            results.push({
+                name: extensionName,
+                status: "⚠️ Missing in Container 2",
+                version: "N/A",
+                settingsMatch: "N/A"
+            });
+        }
+    });
+
+    ext2.forEach(extension2 => {
+        let extensionName = extension2.displayName || "Unknown Extension";
+        if (!checkedExtensions.has(extensionName)) {
+            results.push({
+                name: extensionName,
+                status: "⚠️ Missing in Container 1",
+                version: "N/A",
+                settingsMatch: "N/A"
+            });
+        }
+    });
+
+    updateExtensionsTable(results);
+}
+
 
 
 
