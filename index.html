@@ -156,6 +156,7 @@
             <option value="missing1">⚠️ Missing in Container 1</option>
             <option value="missing2">⚠️ Missing in Container 2</option>
         </select>
+            <button onclick="exportTableToExcel('rulesTable', 'Rules_Comparison')">Export to Excel</button>
             <table id="rulesTable">
                 <thead>
                     <tr>
@@ -185,6 +186,7 @@
             <option value="missing1">⚠️ Missing in Container 1</option>
             <option value="missing2">⚠️ Missing in Container 2</option>
         </select>
+            <button onclick="exportTableToExcel('dataElementTable', 'DataElements_Comparison')">Export to Excel</button>
             <table id="dataElementTable">
                 <thead>
                     <tr>
@@ -210,6 +212,7 @@
                     <option value="missing1">⚠️ Missing in Container 1</option>
                     <option value="missing2">⚠️ Missing in Container 2</option>
                 </select>
+                <button onclick="exportTableToExcel('extensionTable', 'Extensions_Comparison')">Export to Excel</button>
                 <table id="extensionTable">
                     <thead>
                         <tr>
@@ -578,6 +581,29 @@ async function executeScripts() {
 
             await Promise.all(fetchPromises);
         }
+
+        function exportTableToExcel(tableId, filename) {
+                let table = document.getElementById(tableId);
+                if (!table) {
+                    alert("Table not found!");
+                    return;
+                }
+            
+                let rows = Array.from(table.rows);
+                let csvContent = "data:text/csv;charset=utf-8," 
+                    + rows.map(row => 
+                        Array.from(row.cells).map(cell => `"${cell.innerText}"`).join(",")
+                    ).join("\n");
+            
+                let encodedUri = encodeURI(csvContent);
+                let link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", filename + ".csv");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
 
     </script>
     <footer style="text-align: center; padding: 10px; background-color: white; color: #c8102e; position: fixed; bottom: 0; width: 100%; font-weight: bold;">
