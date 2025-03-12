@@ -83,6 +83,23 @@
         tr:hover {
             background-color: #f2f2f2;
         }
+        select {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #c8102e;
+            background-color: #ffffff;
+            color: #c8102e;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        select:focus {
+            outline: none;
+            box-shadow: 0 0 5px rgba(200, 16, 46, 0.5);
+        }
+
         .loader {
             display: none;
             margin: 20px auto;
@@ -113,53 +130,60 @@
 
     <div class="loader" id="loadingSpinner"></div>
 
-    <button class="accordion">Rules Comparison</button>
-    <div class="panel">
+            <!-- Filter for Rules Comparison -->
         <label for="rulesFilter">Filter Rules:</label>
-        <select id="rulesFilter" onchange="filterTable('rulesTable', this.value)">
+        <select id="rulesFilter">
             <option value="all">Show All</option>
-            <option value="✅ Matched">Matched</option>
-            <option value="❌ Mismatch">Mismatched</option>
-            <option value="⚠️ Missing in Container 1">Missing in Container 1</option>
-            <option value="⚠️ Missing in Container 2">Missing in Container 2</option>
+            <option value="matched">✅ Matched</option>
+            <option value="mismatch">❌ Mismatch</option>
+            <option value="missing1">⚠️ Missing in Container 1</option>
+            <option value="missing2">⚠️ Missing in Container 2</option>
         </select>
-
-        <table id="rulesTable">
-            <thead>
-                <tr>
-                    <th>Rule Name</th>
-                    <th>Status</th>
-                    <th>Events Match</th>
-                    <th>Conditions Match</th>
-                    <th>Actions Match</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
-
-    <button class="accordion">Data Element Comparison</button>
+        <p id="noRulesResultsMessage" style="display: none; color: #c8102e; font-weight: bold; text-align: center;">No results found</p>
+        
+        <!-- Rules Comparison Table -->
+        <button class="accordion">Rules Comparison</button>
         <div class="panel">
-            <label for="dataElementsFilter">Filter Data Elements:</label>
-            <select id="dataElementsFilter" onchange="filterTable('dataElementTable', this.value)">
-                <option value="all">Show All</option>
-                <option value="✅ Matched">Matched</option>
-                <option value="❌ Mismatch">Mismatched</option>
-                <option value="⚠️ Missing in Container 1">Missing in Container 1</option>
-                <option value="⚠️ Missing in Container 2">Missing in Container 2</option>
-            </select>
-
-            <table id="dataElementTable">
+            <table id="rulesTable">
                 <thead>
                     <tr>
-                        <th>Data Element Name</th>
+                        <th>Rule Name</th>
                         <th>Status</th>
-                        <th>Object Match</th> <!-- Updated from 'Custom Code Match' -->
+                        <th>Events Match</th>
+                        <th>Conditions Match</th>
+                        <th>Actions Match</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
             </table>
         </div>
+        
+        <!-- Filter for Data Elements Comparison -->
+        <label for="dataElementFilter">Filter Data Elements:</label>
+        <select id="dataElementFilter">
+            <option value="all">Show All</option>
+            <option value="matched">✅ Matched</option>
+            <option value="mismatch">❌ Mismatch</option>
+            <option value="missing1">⚠️ Missing in Container 1</option>
+            <option value="missing2">⚠️ Missing in Container 2</option>
+        </select>
+        <p id="noDataResultsMessage" style="display: none; color: #c8102e; font-weight: bold; text-align: center;">No results found</p>
+        
+        <!-- Data Elements Comparison Table -->
+        <button class="accordion">Data Element Comparison</button>
+        <div class="panel">
+            <table id="dataElementTable">
+                <thead>
+                    <tr>
+                        <th>Data Element Name</th>
+                        <th>Status</th>
+                        <th>Object Match</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
 
 
 
@@ -375,18 +399,37 @@ async function executeScripts() {
             });
         }
 
-        function filterTable(tableId, filterValue) {
+        function applyFilter(tableId, filterId, noResultsMessageId) {
+            let filter = document.getElementById(filterId).value;
             let table = document.getElementById(tableId);
             let rows = table.getElementsByTagName("tr");
+            let hasVisibleRows = false;
         
-            for (let i = 1; i < rows.length; i++) { // Start from 1 to skip header row
-                let statusCell = rows[i].cells[1]; // Status column is the second column (index 1)
-                if (!statusCell) continue;
+            for (let i = 1; i < rows.length; i++) { // Skip the header row
+                let statusCell = rows[i].cells[1].textContent.trim(); // Status column
+                let shouldShow = 
+                    filter === "all" ||
+                    (filter === "matched" && statusCell.includes("✅")) ||
+                    (filter === "mismatch" && statusCell.includes("❌")) ||
+                    (filter === "missing1" && statusCell.includes("⚠️ Missing in Container 1")) ||
+                    (filter === "missing2" && statusCell.includes("⚠️ Missing in Container 2"));
         
-                let statusText = statusCell.textContent || statusCell.innerText;
-                rows[i].style.display = (filterValue === "all" || statusText.includes(filterValue)) ? "" : "none";
+                rows[i].style.display = shouldShow ? "" : "none";
+                if (shouldShow) hasVisibleRows = true;
             }
+        
+            // Show or hide "No results found" message
+            document.getElementById(noResultsMessageId).style.display = hasVisibleRows ? "none" : "block";
         }
+        
+        // Attach event listeners for both filters
+        document.getElementById("rulesFilter").addEventListener("change", function() {
+            applyFilter("rulesTable", "rulesFilter", "noRulesResultsMessage");
+        });
+        document.getElementById("dataElementFilter").addEventListener("change", function() {
+            applyFilter("dataElementTable", "dataElementFilter", "noDataResultsMessage");
+        });
+
 
 
         async function fetchActionSources(container) {
