@@ -291,22 +291,20 @@ async function executeScripts() {
             let results = [];
             let checkedElements = new Set();
         
-            // Loop through Data Elements in container1
             Object.keys(de1).forEach(deName => {
                 let element1 = de1[deName];
                 let element2 = de2[deName]; // Check if exists in container2
                 checkedElements.add(deName);
         
-                // Convert entire object to a comparable string
-                let element1String = JSON.stringify(element1, Object.keys(element1).sort());
-                let element2String = element2 ? JSON.stringify(element2, Object.keys(element2).sort()) : null;
+                // Convert entire object to a string for direct comparison
+                let element1String = JSON.stringify(element1);
+                let element2String = element2 ? JSON.stringify(element2) : null;
         
                 let isMatch = element1String === element2String;
         
                 results.push({
                     deName: deName,
-                    status: element2 ? (isMatch ? "✅ Matched" : "❌ Mismatch") : "⚠️ Missing in Container 2",
-                    objectMatch: element2 ? (isMatch ? "✔" : "❌") : "N/A"
+                    status: element2 ? (isMatch ? "✅ Matched" : "❌ Mismatch") : "⚠️ Missing in Container 2"
                 });
             });
         
@@ -315,14 +313,14 @@ async function executeScripts() {
                 if (!checkedElements.has(deName)) {
                     results.push({
                         deName: deName,
-                        status: "⚠️ Missing in Container 1",
-                        objectMatch: "N/A"
+                        status: "⚠️ Missing in Container 1"
                     });
                 }
             });
         
             updateDataElementTable(results);
         }
+
 
 
 
