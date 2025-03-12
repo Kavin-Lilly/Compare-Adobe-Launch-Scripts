@@ -14,7 +14,7 @@
         }
         h2 {
             text-align: center;
-            color: #c8102e; /* Eli Lilly Red */
+            color: #c8102e;
         }
         input {
             width: 80%;
@@ -74,7 +74,7 @@
             text-align: left;
         }
         th {
-            background-color: #c8102e; /* Eli Lilly Red */
+            background-color: #c8102e;
             color: white;
         }
         tr:nth-child(even) {
@@ -155,60 +155,68 @@
                 iframe.style.display = "none";
                 document.body.appendChild(iframe);
                 let iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-
+        
                 let script = iframeDoc.createElement("script");
                 script.src = scriptURL;
                 script.async = true;
-                script.onload = () => {
-                    setTimeout(() => {
-                        try {
-                            let container = iframe.contentWindow._satellite?._container;
-                            if (container) {
-                                resolve(JSON.parse(JSON.stringify(container)));
-                            } else {
-                                reject(`Failed to load _satellite._container from ${scriptURL}`);
-                            }
-                        } catch (e) {
-                            reject(`Error accessing _satellite._container from ${scriptURL}`);
-                        }
-                        document.body.removeChild(iframe);
-                    }, 10000);
-                };
-                script.onerror = () => reject(`Failed to load script: ${scriptURL}`);
                 iframeDoc.body.appendChild(script);
+        
+                let maxAttempts = 50; // Max wait time ~5 seconds (50 * 100ms)
+                let attempts = 0;
+        
+                function checkContainer() {
+                    let container = iframe.contentWindow._satellite?._container;
+                    if (container) {
+                        // Ensure settings.source is captured as a string if it's a function
+                        container.rules.forEach(rule => {
+                            rule.conditions.forEach(cond => {
+                                if (typeof cond.settings?.source === 'function') {
+                                    cond.settings.source = cond.settings.source.toString();
+                                }
+                            });
+                        });
+                        resolve(JSON.parse(JSON.stringify(container)));
+                        document.body.removeChild(iframe);
+                    } else if (attempts < maxAttempts) {
+                        attempts++;
+                        setTimeout(checkContainer, 100);
+                    } else {
+                        reject(`Failed to load _satellite._container from ${scriptURL}`);
+                        document.body.removeChild(iframe);
+                    }
+                }
+                
+                setTimeout(checkContainer, 100);
             });
         }
-
+        
         async function executeScripts() {
             document.getElementById("loadingSpinner").style.display = "block";
-
             let scriptURL1 = extractScriptURL(document.getElementById("script1").value);
             let scriptURL2 = extractScriptURL(document.getElementById("script2").value);
-
+        
             if (!scriptURL1 || !scriptURL2) {
                 alert("Please enter valid script URLs or <script> tags.");
                 document.getElementById("loadingSpinner").style.display = "none";
                 return;
             }
-
+        
             try {
                 window.container1 = await loadScriptInIsolation(scriptURL1);
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Delay before next script
+                
                 window.container2 = await loadScriptInIsolation(scriptURL2);
-
-                await fetchActionSources(window.container1);
-                await fetchActionSources(window.container2);
-
-                setTimeout(() => {
-                    compareRules();
-                    document.getElementById("loadingSpinner").style.display = "none";
-                }, 2000);
-
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                compareRules();
+                document.getElementById("loadingSpinner").style.display = "none";
             } catch (error) {
                 console.error(error);
                 alert(error);
                 document.getElementById("loadingSpinner").style.display = "none";
             }
         }
+
 
         function compareRules() {
             let rules1 = window.container1.rules || [];
