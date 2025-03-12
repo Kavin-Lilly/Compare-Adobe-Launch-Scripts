@@ -129,6 +129,21 @@
         </table>
     </div>
 
+    <button class="accordion">Data Element Comparison</button>
+    <div class="panel">
+        <table id="dataElementTable">
+            <thead>
+                <tr>
+                    <th>Data Element Name</th>
+                    <th>Status</th>
+                    <th>Custom Code Match</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+
     <script>
         document.querySelectorAll(".accordion").forEach(button => {
             button.addEventListener("click", function () {
@@ -222,6 +237,7 @@ async function executeScripts() {
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         compareRules();
+        compareDataElements();
         document.getElementById("loadingSpinner").style.display = "none";
     } catch (error) {
         console.error(error);
@@ -268,6 +284,49 @@ async function executeScripts() {
             updateTable(results);
         }
 
+        function compareDataElements() {
+            let de1 = window.container1.dataElements || {};
+            let de2 = window.container2.dataElements || {};
+            let results = [];
+            let checkedElements = new Set();
+        
+            // Loop through Data Elements in container1
+            Object.keys(de1).forEach(deName => {
+                let element1 = de1[deName];
+                let element2 = de2[deName]; // Check if exists in container2
+                checkedElements.add(deName);
+        
+                if (element2) {
+                    let sameSource = JSON.stringify(element1.settings?.source) === JSON.stringify(element2.settings?.source);
+                    results.push({
+                        deName: deName,
+                        status: sameSource ? "✅ Matched" : "❌ Mismatch",
+                        sourceMatch: sameSource ? "✔" : "❌"
+                    });
+                } else {
+                    results.push({
+                        deName: deName,
+                        status: "⚠️ Missing in Container 2",
+                        sourceMatch: "N/A"
+                    });
+                }
+            });
+        
+            // Check for Data Elements present in container2 but not in container1
+            Object.keys(de2).forEach(deName => {
+                if (!checkedElements.has(deName)) {
+                    results.push({
+                        deName: deName,
+                        status: "⚠️ Missing in Container 1",
+                        sourceMatch: "N/A"
+                    });
+                }
+            });
+        
+            updateDataElementTable(results);
+        }
+
+
         function updateTable(results) {
             const tableBody = document.querySelector("#rulesTable tbody");
             tableBody.innerHTML = "";
@@ -282,6 +341,22 @@ async function executeScripts() {
                 tableBody.appendChild(tr);
             });
         }
+
+        function updateDataElementTable(results) {
+            const tableBody = document.querySelector("#dataElementTable tbody");
+            tableBody.innerHTML = "";
+        
+            results.forEach(row => {
+                let tr = document.createElement("tr");
+                Object.values(row).forEach(value => {
+                    let td = document.createElement("td");
+                    td.textContent = value;
+                    tr.appendChild(td);
+                });
+                tableBody.appendChild(tr);
+            });
+        }
+
 
         async function fetchActionSources(container) {
             if (!container || !container.rules) return;
