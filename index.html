@@ -123,9 +123,11 @@
 
     <label>Launch Script 1 (URL or &lt;script&gt; tag):</label>
     <input type="text" id="script1" placeholder="Paste Launch script URL or &lt;script&gt; tag">
+    <p><strong>Container 1:</strong> <span id="container1Info">Not loaded</span></p>
 
     <label>Launch Script 2 (URL or &lt;script&gt; tag):</label>
     <input type="text" id="script2" placeholder="Paste Launch script URL or &lt;script&gt; tag">
+    <p><strong>Container 2:</strong> <span id="container2Info">Not loaded</span></p>
 
     <button onclick="executeScripts()">Execute & Compare</button>
 
@@ -299,10 +301,12 @@ async function executeScripts() {
     try {
         window.container1 = await loadScriptInIsolation(scriptURL1);
         await fetchActionSources(window.container1);
+        document.getElementById("container1Info").textContent = `${window.container1.property?.name || "Unknown"} - ${window.container1.environment?.stage || "Unknown"}`;
         await new Promise(resolve => setTimeout(resolve, 2000)); // Delay before next script
 
         window.container2 = await loadScriptInIsolation(scriptURL2);
         await fetchActionSources(window.container2);
+        document.getElementById("container2Info").textContent = `${window.container2.property?.name || "Unknown"} - ${window.container2.environment?.stage || "Unknown"}`;
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         compareRules();
