@@ -583,26 +583,26 @@ async function executeScripts() {
         }
 
         function exportTableToExcel(tableId, filename) {
-                let table = document.getElementById(tableId);
-                if (!table) {
-                    alert("Table not found!");
-                    return;
-                }
-            
-                let rows = Array.from(table.rows);
-                let csvContent = "data:text/csv;charset=utf-8," 
-                    + rows.map(row => 
-                        Array.from(row.cells).map(cell => `"${cell.innerText}"`).join(",")
-                    ).join("\n");
-            
-                let encodedUri = encodeURI(csvContent);
-                let link = document.createElement("a");
-                link.setAttribute("href", encodedUri);
-                link.setAttribute("download", filename + ".csv");
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
+            let table = document.getElementById(tableId);
+            let rows = table.querySelectorAll("tr");
+            let csvContent = "\uFEFF"; // UTF-8 BOM to fix special characters in Excel
+        
+            rows.forEach(row => {
+                let cols = row.querySelectorAll("th, td");
+                let rowData = [];
+                cols.forEach(col => rowData.push('"' + col.textContent + '"')); // Wrap values in quotes
+                csvContent += rowData.join(",") + "\n";
+            });
+        
+            let blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            let link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
 
 
     </script>
