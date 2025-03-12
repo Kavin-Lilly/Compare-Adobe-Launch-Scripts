@@ -293,10 +293,18 @@
                     // Start observing changes in the iframe window
                     observer.observe(iframe.contentWindow.document, { childList: true, subtree: true });
             
-                    script.onerror = () => reject(`Failed to load script: ${scriptURL}`);
+                    // Handle script load failure
+                    script.onerror = () => {
+                        console.warn(`⚠️ Warning: Failed to load script: ${scriptURL}`);
+                        alert(`⚠️ The Launch script couldn't be loaded (404 Error). It may not be live yet.`);
+                        document.body.removeChild(iframe);
+                        reject(`Failed to load script: ${scriptURL}`);
+                    };
+            
                     iframeDoc.body.appendChild(script);
                 });
             }
+
 
 
 async function executeScripts() {
