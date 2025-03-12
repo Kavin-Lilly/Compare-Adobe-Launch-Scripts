@@ -115,6 +115,15 @@
 
     <button class="accordion">Rules Comparison</button>
     <div class="panel">
+        <label for="rulesFilter">Filter Rules:</label>
+        <select id="rulesFilter" onchange="filterTable('rulesTable', this.value)">
+            <option value="all">Show All</option>
+            <option value="✅ Matched">Matched</option>
+            <option value="❌ Mismatch">Mismatched</option>
+            <option value="⚠️ Missing in Container 1">Missing in Container 1</option>
+            <option value="⚠️ Missing in Container 2">Missing in Container 2</option>
+        </select>
+
         <table id="rulesTable">
             <thead>
                 <tr>
@@ -131,6 +140,15 @@
 
     <button class="accordion">Data Element Comparison</button>
         <div class="panel">
+            <label for="dataElementsFilter">Filter Data Elements:</label>
+            <select id="dataElementsFilter" onchange="filterTable('dataElementTable', this.value)">
+                <option value="all">Show All</option>
+                <option value="✅ Matched">Matched</option>
+                <option value="❌ Mismatch">Mismatched</option>
+                <option value="⚠️ Missing in Container 1">Missing in Container 1</option>
+                <option value="⚠️ Missing in Container 2">Missing in Container 2</option>
+            </select>
+
             <table id="dataElementTable">
                 <thead>
                     <tr>
@@ -357,6 +375,18 @@ async function executeScripts() {
             });
         }
 
+        function filterTable(tableId, filterValue) {
+            let table = document.getElementById(tableId);
+            let rows = table.getElementsByTagName("tr");
+        
+            for (let i = 1; i < rows.length; i++) { // Start from 1 to skip header row
+                let statusCell = rows[i].cells[1]; // Status column is the second column (index 1)
+                if (!statusCell) continue;
+        
+                let statusText = statusCell.textContent || statusCell.innerText;
+                rows[i].style.display = (filterValue === "all" || statusText.includes(filterValue)) ? "" : "none";
+            }
+        }
 
 
         async function fetchActionSources(container) {
