@@ -469,7 +469,7 @@ async function executeScripts() {
 
             for (let i = 0; i < maxLength; i++) {
                 if (JSON.stringify(arr1[i]) !== JSON.stringify(arr2[i])) {
-                    mismatchIndexes.push(i);
+                    mismatchIndexes.push(i + 1);
                 }
             }
             return mismatchIndexes;
